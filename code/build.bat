@@ -7,7 +7,7 @@ IF NOT EXIST ..\build mkdir ..\build
 pushd ..\build
 
 REM c code compilation
-cl %debug_fg% /Fe:app.exe %code_path%\main.c
+cl /std:c11 %debug_fg% /Fe:app.exe %code_path%\main.c
 
 echo Running application ../
 
