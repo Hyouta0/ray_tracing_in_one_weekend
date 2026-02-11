@@ -3,7 +3,8 @@
 #include "vec3.h"
 
 #include "defines.h"
-#include <stdio.h>
+#include "logger.h"
+
 
 inline color
 ray_color(ray* r){
@@ -36,27 +37,28 @@ int main(void){
 	vec3 viewport_u = (vec3) {viewport_width, 0, 0};
 	vec3 viewport_v = (vec3) {0, -viewport_height, 0};
 
+
 	// Calculate the horizontal and vertical delta vectors from pixel to pixel.
 	vec3 pixel_delta_u = scale_vec3(viewport_u, 1.0/image_width);
 	vec3 pixel_delta_v = scale_vec3(viewport_v,1.0/image_height);
 
+
 	// Calculate the location of the upper left pixel.
 	vec3 viewport_upper_left = sub_vec3(camera_center,
 										sub_vec3((vec3){0,0,focal_length},
-												 sub_vec3(scale_vec3(viewport_u,1.0/2.0),
-													 	  scale_vec3(viewport_v,1.0/2.0))));
+												 sub_vec3(scale_vec3(viewport_u,0.5),
+													 	  scale_vec3(viewport_v,0.5))));
+	log_vec3(viewport_upper_left);
 	vec3 pixel00_loc = add_vec3(viewport_upper_left,
 								scale_vec3(add_vec3(pixel_delta_u, 
 													pixel_delta_v), 
 											0.5));
 
 	// Render
-
 	fprintf(stdout,"P3\n%d %d\n255\n",image_width,image_height);
 
 	for(i32 col = 0; col < image_height; col++){
-		fprintf(stderr,"\rScanlines remaining: %d",image_height - col);
-		fflush(stderr);
+		log_del("\rScanlines remaining: %d",image_height-col-1);
 		for(i32 row = 0; row < image_width; row++){
 			point3 pixel_center = add_vec3(pixel00_loc,
 										 add_vec3(scale_vec3(pixel_delta_u,row),
@@ -68,6 +70,7 @@ int main(void){
 			write_color(stdout,&pixel_color);
 		}
 	}
-	fprintf(stderr,"\rDone.    \n");
+	log_del("\rDone.     \n");
+
 	return 0;
 }
