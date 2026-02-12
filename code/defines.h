@@ -46,7 +46,7 @@ STATIC_ASSERT(sizeof(f64) == 8,"float 8 byte is not correct\n");
 
 #if defined(DEBUG)
   #define assert(expression) if(!(expression)){ *(int *)0 = 0; }
-#elif
+#else
   #define assert(expression)
 #endif 
 

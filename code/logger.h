@@ -1,7 +1,6 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 #include <stdio.h>
-// TODO: add log level
 // TODO: add line no. and file name
 // TODO: format string like this "[ERROR]: This is my error\n"
 
@@ -22,12 +21,17 @@
 
 #define log(color,fmt,...)\
 	do{\
-		fprintf(stderr,"\033[1;%dm" fmt "\033[0m",color,##__VA_ARGS__);\
+		fprintf(stderr,"\033[1;%dm" fmt "\033[0m ",color,##__VA_ARGS__);\
 		fflush(stderr);\
 	}while(0)
+#if defined(DEBUG)
+	#define log_del(fmt,...) log(0,fmt,##__VA_ARGS__)
+	#define log_dev(fmt,...) log(33,fmt,##__VA_ARGS__)
+#else
+	#define log_del(fmt,...)
+	#define log_dev(fmt,...)
+#endif
 
-#define log_del(fmt,...) log(0,fmt,##__VA_ARGS__)
-#define log_dev(fmt,...) log(32,fmt,##__VA_ARGS__)
 #define log_err(fmt,...) log(31,fmt,##__VA_ARGS__)
 
 
