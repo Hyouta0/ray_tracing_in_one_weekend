@@ -14,16 +14,17 @@
  */
 
 
-inline b8
+inline f64
 hit_sphere(point3 center,f64 radius, ray r){
-	b8 result = FALSE;
+	f64 result = 0.0;
 	vec3 oc = sub_vec3(center,r.orig);
 	f64 a = dot_vec3(r.dir,r.dir);
 	f64 b = -2.0 * dot_vec3(r.dir,oc);
 	f64 c = dot_vec3(oc,oc) - radius*radius;
 	f64 discriminant = b*b - 4*a*c;
+
+	result = (discriminant < 0)? -1.0 : (-b - sqrt(discriminant))/ 2.0*a;
 	
-	result = (discriminant >= 0);
 	return result;
 }
 
@@ -32,8 +33,10 @@ ray_color(ray r){
 	color result = {0};
 
 	point3 sphere = (point3) { 0.0,0.0,-1.0}; // sphere is center of screen.. on viewport
-	if(hit_sphere(sphere,0.5,r)){
-		result = (color) {1,0,0};
+	f64 t = hit_sphere(sphere,0.5,r);
+	if(t > 0.0){
+		vec3 n = unit_vector_vec3(ray_at(&r,t));
+		result = scale_vec3((color){n.x+1, n.y+1, n.z+1},0.5);
 	}else{
 		vec3 unit_direction = unit_vector_vec3(r.dir);
 		f64 a = 0.5 * (unit_direction.y + 1.0);
