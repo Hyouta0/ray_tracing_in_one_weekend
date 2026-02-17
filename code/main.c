@@ -5,7 +5,14 @@
 #include "defines.h"
 #include "logger.h"
 
-#include <math.h>
+/*
+ * NOTE: (always check order of compution of math)
+ * when normaly using -,/  C used right to left
+ * if you copy same directly while using sub_vec() & scale_vec() 
+ * it will be wrong as order for compution of funcions is left to right
+ * !! Was err that was hard to find.
+ */
+
 
 inline b8
 hit_sphere(point3 center,f64 radius, ray r){
@@ -27,10 +34,7 @@ ray_color(ray r){
 	point3 sphere = (point3) { 0.0,0.0,-1.0}; // sphere is center of screen.. on viewport
 	if(hit_sphere(sphere,0.5,r)){
 		result = (color) {1,0,0};
-		log_del("\rHit the circle\n");
-		assert(0);
 	}else{
-		log_dev("\rMiss Circle");
 		vec3 unit_direction = unit_vector_vec3(r.dir);
 		f64 a = 0.5 * (unit_direction.y + 1.0);
 
@@ -67,10 +71,11 @@ int main(void){
 
 
 	// Calculate the location of the upper left pixel.
-	vec3 viewport_upper_left = sub_vec3(camera_center,
-										sub_vec3((vec3){0,0,focal_length},
-												 sub_vec3(scale_vec3(viewport_u,0.5),
-													 	  scale_vec3(viewport_v,0.5))));
+	vec3 viewport_upper_left = sub_vec3(
+									sub_vec3(
+										 sub_vec3(camera_center,(vec3){0,0,focal_length})
+												 ,scale_vec3(viewport_u,0.5))
+									,scale_vec3(viewport_v,0.5));
 	//log_vec3(viewport_upper_left);
 	vec3 pixel00_loc = add_vec3(viewport_upper_left,
 								scale_vec3(add_vec3(pixel_delta_u, 
