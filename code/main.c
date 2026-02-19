@@ -1,6 +1,7 @@
 #include "color.h"
 #include "ray.h"
 #include "vec3.h"
+#include "entity.h"
 
 #include "defines.h"
 #include "logger.h"
