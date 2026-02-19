@@ -1,10 +1,9 @@
-#include "color.h"
-#include "ray.h"
-#include "vec3.h"
-#include "entity.h"
 
 #include "defines.h"
+#include "rtweekend.h"
 #include "logger.h"
+#include "entity.h"
+
 
 /*
  * NOTE: (always check order of compution of math)
@@ -15,37 +14,25 @@
  */
 
 
-inline f64
-hit_sphere(point3 center,f64 radius, ray r){
-	f64 result = 0.0;
-	vec3 oc = sub_vec3(center,r.orig);
-	f64 a = length_squared_vec3(r.dir);
-	f64 h = dot_vec3(r.dir,oc);
-	f64 c = length_squared_vec3(oc) - radius*radius;
-	f64 discriminant = h*h - a*c;
-
-	result = (discriminant < 0)? -1.0 : (h - sqrt(discriminant))/ a;
-	
-	return result;
-}
 
 inline color
-ray_color(ray r){
-	color result = {0};
+ray_color(ray r,sphere_list* sl){
+	hit_record rec;
 
-	point3 sphere = (point3) { 0.0,0.0,-1.0}; // sphere is center of screen.. on viewport
-	f64 t = hit_sphere(sphere,0.5,r);
-	if(t > 0.0){
-		vec3 n = unit_vector_vec3(sub_vec3(ray_at(&r,t),sphere));
-		result = scale_vec3((color){n.x+1, n.y+1, n.z+1},0.5);
-	}else{
-		vec3 unit_direction = unit_vector_vec3(r.dir);
-		f64 a = 0.5 * (unit_direction.y + 1.0);
-
-		result = add_vec3(scale_vec3((color){1.0,1.0,1.0}, (1.0 - a)),
-						  scale_vec3((color){0.5, 0.7, 1.0},a));
+	if(hit_sphere_list(r,0,infinity,sl,&rec)){
+		return scale_vec3(
+					add_vec3(rec.normal,
+							 (color){1,1,1}),
+					0.5);	
 	}
-	return result;
+
+	vec3 unit_direction = unit_vector_vec3(r.dir);
+	f64 a = 0.5*(unit_direction.y + 1.0);
+	return add_vec3(
+					scale_vec3((color){1.0,1.0,1.0},(1.0 -a)),
+					scale_vec3((color){0.5,0.7,1.0},a)
+					);
+	
 }
 
 
@@ -57,6 +44,10 @@ int main(void){
 	// Calculate the image height, and ensure that it's at least 1
 	i32 image_height = (i32) (image_width/aspect_ratio);
 	image_height = (image_height < 1)? 1 : image_height;
+	// World
+	sphere_list world;
+	add_sphere(&world,(point3){0,0,-1},0.5);
+	add_sphere(&world,(point3){0,-100.5,-1},100);
     
 	// Camera
 	f64 focal_length = 1.0;
@@ -99,7 +90,7 @@ int main(void){
 			vec3 ray_direction = sub_vec3(pixel_center,camera_center);
 			ray r = (ray){camera_center,ray_direction};
 
-			color pixel_color = ray_color(r);
+			color pixel_color = ray_color(r,&world);
 			write_color(stdout,&pixel_color);
 		}
 	}
