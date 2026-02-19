@@ -16,15 +16,6 @@ typedef struct{
 	b32 front_face;
 }entity;
 
-/*
- * This function does
- * 1. calculates if ray has hit the circle
- * 2. if ray hit circle, find 
- * 		a)point where it hit, 
- * 		b) normal aka dir (from center to p) 
- * 		c)'t' scaler value tells how far ray whent to hit circle.
- */
-
 void
 set_face_normal(ray r, vec3 outward_normal,entity* rec){
 	// Set the hit record normal vector.
@@ -34,6 +25,14 @@ set_face_normal(ray r, vec3 outward_normal,entity* rec){
 	rec->normal = rec->front_face? outward_normal : scale_vec3(outward_normal,-1.0);
 }
 
+/*
+ * This function does
+ * 1. calculates if ray has hit the circle
+ * 2. if ray hit circle, find 
+ * 		a)point where it hit, 
+ * 		b) normal aka dir (from center to p) 
+ * 		c)'t' scaler value tells how far ray whent to hit circle.
+ */
 b32
 hit(ray r, f64 ray_tmin, f64 ray_tmax, entity* rec){
 
