@@ -19,7 +19,7 @@ inline color
 ray_color(ray r,sphere_list* sl){
 	hit_record rec;
 
-	if(hit_sphere_list(r,0,INFINITY,sl,&rec)){
+	if(hit_sphere_list(r,create_interval(0,INFINITY),sl,&rec)){
 		return scale_vec3(
 					add_vec3(rec.normal,
 							 (color){1,1,1}),

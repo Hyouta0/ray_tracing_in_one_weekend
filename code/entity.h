@@ -34,7 +34,7 @@ set_face_normal(ray r, vec3 outward_normal,hit_record* rec){
 }
 
 b32
-hit(ray r, f64 ray_tmin, f64 ray_tmax,sphere* entity, hit_record* rec){
+hit(ray r, interval ray_t,sphere* entity, hit_record* rec){
 	vec3 oc = sub_vec3(entity->center,r.orig);
 	f64 a = length_squared_vec3(r.dir);
 	f64 h = dot_vec3(r.dir,oc);
@@ -46,9 +46,9 @@ hit(ray r, f64 ray_tmin, f64 ray_tmax,sphere* entity, hit_record* rec){
 	f64 sqrtd = sqrt(discriminant);
 	// Find the nearest root that lies in the acceptable range.
 	f64 root = (h - sqrtd) / a;
-	if(root <= ray_tmin || ray_tmax <= root){
+	if(!interval_contains(ray_t,root)){
 		root = (h + sqrtd)/a;
-		if(root <= ray_tmin || ray_tmax <= root) return FALSE;
+		if(!interval_contains(ray_t,root)) return FALSE;
 	}
 
 	rec->t = root;
@@ -71,14 +71,14 @@ create_sphere(point3 center, f64 radius){
 
 b32
 hit_sphere_list(ray r, 
-				f64 ray_tmin, f64 ray_tmax,
+				interval ray_t,
 				sphere_list* sl,hit_record* rec){
 	hit_record temp_rec = {0};
 	b32 hit_anything = FALSE;
-	f64 closest_so_far = ray_tmax;
+	f64 closest_so_far = ray_t.max;
 
 	for(i32 sphere_index = 0;sphere_index< sl->sphere_count;sphere_index++){
-		if(hit(r,ray_tmin,closest_so_far,
+		if(hit(r,create_interval(ray_t.min,closest_so_far),
 			   sl->spheres+sphere_index,&temp_rec)){
 			hit_anything = TRUE;
 			closest_so_far = temp_rec.t;
