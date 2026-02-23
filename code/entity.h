@@ -65,7 +65,7 @@ inline sphere
 create_sphere(point3 center, f64 radius){
 	sphere sp = {0};
 	sp.center = center;
-	sp.radius = max(radius,0);
+	sp.radius = max_num(radius,0);
 	return sp;
 }
 

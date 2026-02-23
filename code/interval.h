@@ -30,6 +30,14 @@ interval_surrounds(interval itvl, f64 x){
 	return result;
 }
 
+inline f64
+interval_clamp(interval itvl,f64 number){
+	f64 clamped_number = number;
+	if(number < itvl.min) clamped_number = itvl.min;
+	if(number > itvl.max) clamped_number = itvl.max;
+	return clamped_number;
+}
+
 
 const interval interval_empty = {+INFINITY, -INFINITY};
 const interval interval_universe = {-INFINITY, +INFINITY};

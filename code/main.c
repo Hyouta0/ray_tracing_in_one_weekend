@@ -13,8 +13,10 @@ int main(void){
 	camera cam;
 	f64 aspect_ratio = 16.0 / 9.0;
 	i32 image_width = 400;
+	i32 samples_per_pixel = 100;
 
-	create_camera(aspect_ratio,image_width,&cam);
+	create_camera(aspect_ratio,image_width
+				  ,samples_per_pixel,&cam);
 
 	render(&world,&cam);
 

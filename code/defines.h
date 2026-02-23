@@ -24,8 +24,8 @@ typedef signed int  b32;
 #define FALSE 0
 
 //NOTE: f(i++,y) increment and decriment are not to be used
-#define max(X,Y) ((X) > (Y) ? (X) : (Y))
-#define min(X,Y) ((X) < (Y) ? (X) : (Y))
+#define max_num(X,Y) ((X) > (Y) ? (X) : (Y))
+#define min_num(X,Y) ((X) < (Y) ? (X) : (Y))
 
 #if defined(__clang__) || defined(__gcc__)
 #define STATIC_ASSERT _Static_assert
