@@ -95,7 +95,7 @@ ray_color(ray r, i32 depth, sphere_list* sl){
 	hit_record rec;
 
 	if(hit_sphere_list(r,create_interval(0.001,INFINITY),sl,&rec)){
-		vec3 direction = random_on_hemisphere(rec.normal);
+		vec3 direction = add_vec3(rec.normal, random_unit_vector_vec3());
 		return scale_vec3(
 				ray_color((ray){rec.p,direction},depth-1,sl),
 					0.5);	
