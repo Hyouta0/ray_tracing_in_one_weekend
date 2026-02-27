@@ -6,6 +6,7 @@ typedef struct{
 	f64 aspect_ratio;// ratio of image width over height
 	i32 image_width;// Rendered image width in pixel count 
 	i32 samples_per_pixel;// Count of random samples for each pixel;
+	i32 max_depth;
 
 	i32 image_height;        // Rendered image height
 	f64 pixel_samples_scale; // Color scale factor for a sum of pixel samples
@@ -23,10 +24,12 @@ typedef struct{
  * !! Was err that was hard to find.
  */
 internal void 
-create_camera(f64 aspect_ratio,i32 image_width,i32 samples_per_pixel,camera* kodak){
+create_camera(f64 aspect_ratio, i32 image_width,
+			  i32 samples_per_pixel, i32 max_depth, camera* kodak){
 	kodak->aspect_ratio = aspect_ratio;
 	kodak->image_width = image_width;
 	kodak->samples_per_pixel = samples_per_pixel;
+	kodak->max_depth = max_depth;
 
 	kodak->image_height = (i32) (image_width/aspect_ratio);
 	kodak->image_height = (kodak->image_height < 1)? 1: kodak->image_height;
@@ -61,11 +64,11 @@ create_camera(f64 aspect_ratio,i32 image_width,i32 samples_per_pixel,camera* kod
 
 }
 
-#define quick_camera(cam) create_camera(1.0,100,10,#cam)
+#define quick_camera(cam) create_camera(1.0,100,10,10,#cam)
 
 inline vec3
 sample_square(void){
-	vec3 random_point_vec = {random_f64() - 0.5,
+	vec3 random_point_vec = {random_f64() - 0.5, // make range [-0.5 to 0.5]
 							 random_f64() - 0.5,
 							 0};
 
@@ -87,13 +90,14 @@ get_ray(i32 i, i32 j,camera* cam){
 }
 
 inline color
-ray_color(ray r,sphere_list* sl){
+ray_color(ray r, i32 depth, sphere_list* sl){
+	if(depth <= 0) return (color){0,0,0};
 	hit_record rec;
 
-	if(hit_sphere_list(r,create_interval(0,INFINITY),sl,&rec)){
+	if(hit_sphere_list(r,create_interval(0.001,INFINITY),sl,&rec)){
+		vec3 direction = random_on_hemisphere(rec.normal);
 		return scale_vec3(
-					add_vec3(rec.normal,
-							 (color){1,1,1}),
+				ray_color((ray){rec.p,direction},depth-1,sl),
 					0.5);	
 	}
 
@@ -115,9 +119,12 @@ render(sphere_list *world,camera* kodak){
 		log_del("\rScanlines remaining: %d",kodak->image_height-row-1);
 		for(i32 col = 0; col < kodak->image_width; col++){
 			color pixel_color = {0,0,0};
+			/* in one pixel making 100 rays which are little offset from 
+			 * center of pixel, but are inside pixel
+			 */
 			for(i32 sample = 0; sample < kodak->samples_per_pixel;sample++){
 				ray r = get_ray(col,row,kodak);
-				pixel_color = add_vec3(pixel_color,ray_color(r,world));
+				pixel_color = add_vec3(pixel_color,ray_color(r,kodak->max_depth,world));
 			}
 			pixel_color = scale_vec3(pixel_color,kodak->pixel_samples_scale);
 			write_color(stdout,&pixel_color);

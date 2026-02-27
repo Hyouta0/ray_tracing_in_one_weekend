@@ -100,4 +100,42 @@ unit_vector_vec3(vec3 vector_0){
 						1.0/length_vec3(vector_0));
 	return result;
 }
+
+#include "rtweekend.h"
+
+inline vec3
+random_vec3(void){
+	return (vec3){random_f64(),random_f64(),random_f64()};
+}
+
+inline vec3
+random_in_range_vec3(f64 min, f64 max){
+	return (vec3)
+	{ random_in_range_f64(min,max),
+	  random_in_range_f64(min,max),
+	  random_in_range_f64(min,max) };
+		
+}
+
+// Diffuse Materials 
+inline vec3
+random_unit_vector_vec3(void){
+	while(TRUE){
+		vec3 p = random_in_range_vec3(-1,1);
+		f64 lensq = length_squared_vec3(p); // radius sqed
+		if(1e-160 < lensq && lensq <= 1){ // f64 can support 10^-160 values
+			return scale_vec3(p,1/sqrt(lensq));
+		}
+	}
+}
+
+inline vec3
+random_on_hemisphere(vec3 normal){
+	vec3 on_unit_sphere = random_unit_vector_vec3();
+	if(dot_vec3(on_unit_sphere,normal) > 0.0) // In the same hemisphere as the normal
+		return on_unit_sphere;
+	else
+		return scale_vec3(on_unit_sphere,-1);
+}
+
 #endif
