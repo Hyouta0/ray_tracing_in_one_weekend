@@ -9,14 +9,14 @@
 int main(void){
 	sphere_list world;
 
-	Material material_ground = create_material(MATERIAL_TYPE_LAMBERTIAN,
-											   (color){0.8,0.8,0.0});
-	Material material_center = create_material(MATERIAL_TYPE_LAMBERTIAN,
-											   (color){0.1,0.2,0.5});
-	Material material_left = create_material(MATERIAL_TYPE_METAL,
-											   (color){0.8,0.8,0.0});
-	Material material_right = create_material(MATERIAL_TYPE_METAL,
-											   (color){0.8,0.8,0.0});
+	color ground_color= (color){0.8,0.8,0.0};
+	color center_color = (color){0.1,0.2,0.5};
+	color left_color = (color){0.8,0.8,0.8};
+	color right_color = (color){0.8,0.6,0.2};
+	Material material_ground = create_material_lambertian(ground_color);
+	Material material_center = create_material_lambertian(center_color);
+	Material material_left = create_material_metal(left_color,0.3);
+	Material material_right = create_material_metal(right_color,1.0);
 
 
 

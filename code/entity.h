@@ -117,7 +117,10 @@ scatter_lambertian(ray r_in, hit_record rec, color* attenuation, ray* scattered)
 internal b32
 scatter_metal(ray r_in, hit_record rec, 
 				   color* attenuation, ray* scattered){
+	f64 fuzz = (rec.mat->fuzz < 1.0)? rec.mat->fuzz : 1;
 	vec3 reflected = reflect_vec3(r_in.dir, rec.normal);
+	reflected = add_vec3(unit_vector_vec3(reflected),
+			scale_vec3(random_unit_vector_vec3(),fuzz));
 	*scattered = (ray){rec.p,reflected};
 	*attenuation = rec.mat->albedo;
 	return TRUE;
