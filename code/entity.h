@@ -3,6 +3,7 @@
 
 #include "defines.h"
 #include "ray.h"
+#include "material.h"
 #include <math.h>
 // TODO: use sphere pointer while functions, less data movement
 #define MAX_SPHERES 1024
@@ -11,12 +12,14 @@ typedef struct{
 	point3 p;
 	vec3 normal;
 	f64 t;
+	Material* mat;
 	b32 front_face;
 }hit_record;
 
 typedef struct{
 	point3 center;
 	f64 radius;
+	Material* mat;
 }sphere;
 
 typedef struct{ 
@@ -24,6 +27,24 @@ typedef struct{
 	sphere spheres[MAX_SPHERES];
 }sphere_list;
 
+/* ========================== sphere ========================== */
+inline sphere
+create_sphere(point3 center, f64 radius, Material* mat){
+	sphere sp = {0};
+	sp.center = center;
+	sp.radius = max_num(radius,0);
+	sp.mat = mat;
+	return sp;
+}
+
+inline void
+add_sphere(sphere_list* sl,point3 center,f64 radius,Material* mat){
+
+	if(sl->sphere_count < MAX_SPHERES){
+		sl->spheres[sl->sphere_count++] = create_sphere(center,radius,mat);	
+	}else log_err("sphere_list is full\n");
+}
+/* ======================== Has ray hit any circle =============== */
 
 inline void
 set_face_normal(ray r, vec3 outward_normal,hit_record* rec){
@@ -56,17 +77,9 @@ hit(ray r, interval ray_t,sphere* entity, hit_record* rec){
 	vec3 outward_normal = scale_vec3(sub_vec3(rec->p,entity->center)
 									,1.0/entity->radius);
 	set_face_normal(r,outward_normal,rec);
+	rec->mat = entity->mat;
 
 	return TRUE;
-}
-
-
-inline sphere
-create_sphere(point3 center, f64 radius){
-	sphere sp = {0};
-	sp.center = center;
-	sp.radius = max_num(radius,0);
-	return sp;
 }
 
 b32
@@ -88,12 +101,41 @@ hit_sphere_list(ray r,
 	return hit_anything;
 }
 
-inline void
-add_sphere(sphere_list* sl,point3 center,f64 radius){
+/* ===================== Material scattere code =================== */
+internal b32
+scatter_lambertian(ray r_in, hit_record rec, color* attenuation, ray* scattered){
+	vec3 scatter_direction = add_vec3(rec.normal, 
+									  random_unit_vector_vec3());
 
-	if(sl->sphere_count < MAX_SPHERES){
-		sl->spheres[sl->sphere_count++] = create_sphere(center,radius);	
-	}else log_err("sphere_list is full\n");
+	if(near_zero(scatter_direction)) scatter_direction = rec.normal;
+
+	*scattered = (ray){rec.p, scatter_direction};
+	*attenuation = rec.mat->albedo;
+	return TRUE;
+}
+
+internal b32
+scatter_metal(ray r_in, hit_record rec, 
+				   color* attenuation, ray* scattered){
+	vec3 reflected = reflect_vec3(r_in.dir, rec.normal);
+	*scattered = (ray){rec.p,reflected};
+	*attenuation = rec.mat->albedo;
+	return TRUE;
+}
+
+inline b32
+scatter(ray r_in, hit_record rec, color* attenuation, ray* scattered){
+	switch(rec.mat->material_type){
+		case MATERIAL_TYPE_LAMBERTIAN:{
+			return scatter_lambertian(r_in,rec,attenuation,scattered);
+		}break;
+		case MATERIAL_TYPE_METAL:{
+			return scatter_metal(r_in,rec,attenuation,scattered);
+		}break;
+		default:{
+			return FALSE;
+		}break;
+	}
 }
 
 #endif

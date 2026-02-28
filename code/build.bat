@@ -1,7 +1,7 @@
 
 @echo off
 set code_path=..\code
-set debug_fg=/permissive- /nologo /W4 /WX /Zi /DDEBUG=1
+set debug_fg=/permissive- /nologo /W4 /WX /Zi /wd4100 /DDEBUG=1
 
 IF NOT EXIST ..\build mkdir ..\build
 pushd ..\build

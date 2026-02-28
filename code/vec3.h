@@ -86,6 +86,14 @@ length_squared_vec3(vec3 vector_0){
 
 #include <math.h>
 
+inline b32
+near_zero(vec3 vector_0){
+	f64 s = 1e-8;
+	return (fabs(vector_0.x) < s) 
+			&& (fabs(vector_0.y) < s) 
+			&& (fabs(vector_0.z) < s);
+}
+
 inline f64 
 length_vec3(vec3 vector_0){
 	f64 result = 0.0;
@@ -136,6 +144,12 @@ random_on_hemisphere(vec3 normal){
 		return on_unit_sphere;
 	else
 		return scale_vec3(on_unit_sphere,-1);
+}
+
+inline vec3
+reflect_vec3(vec3 v, vec3 n){
+	return sub_vec3(v,
+			scale_vec3(n,2.0*dot_vec3(v,n)));
 }
 
 #endif
