@@ -9,6 +9,9 @@ typedef struct{
 	i32 max_depth; // Maximum number of ray bounces into scene
 	
 	f64 vfov; // vertical view angle (field of view)
+	point3 lookfrom; // Point camera is looking from
+	point3 lookat; // Point camera is looking at
+	vec3   vup;   // Camera- relative "up" direction
 
 	i32 image_height;        // Rendered image height
 	f64 pixel_samples_scale; // Color scale factor for a sum of pixel samples
@@ -16,6 +19,7 @@ typedef struct{
 	point3 pixel00_loc;      // Location of pixel 0,0
 	vec3   pixel_delta_u;    // Offset to pixel to the right
 	vec3   pixel_delta_v;    // offset to pixel below
+	vec3   u,v,w; // camera frame basis vectors
 }camera;
 
 /*
@@ -27,40 +31,52 @@ typedef struct{
  */
 internal void 
 create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel, 
-			  i32 max_depth,f64 vfov, camera* kodak){
+			  i32 max_depth,f64 vfov, point3 lookfrom, point3 lookat, 
+			  vec3 vup, camera* kodak){
 	kodak->aspect_ratio = aspect_ratio;
 	kodak->image_width = image_width;
 	kodak->samples_per_pixel = samples_per_pixel;
 	kodak->max_depth = max_depth;
+
 	kodak->vfov = vfov;
+	kodak->lookfrom = lookfrom;
+	kodak->lookat = lookat;
+	kodak->vup = vup;
 
 	kodak->image_height = (i32) (image_width/aspect_ratio);
 	kodak->image_height = (kodak->image_height < 1)? 1: kodak->image_height;
 
 	kodak->pixel_samples_scale = 1.0 / kodak->samples_per_pixel;
 
-	kodak->center = (point3){0,0,0}; 
+	kodak->center = lookfrom; 
 
 	//Determine viewport dimensions.
-	f64 focal_length = 1.0;
+	f64 focal_length = length_vec3(sub_vec3(lookfrom,lookat));
 	f64 theta = degrees_to_radians(vfov);
 	f64 h = tan(theta/2);
 	f64 viewport_height = 2.0*h*focal_length;
 	f64 viewport_width = viewport_height * ((f64)image_width/kodak->image_height);
 
+	// Calculate the u,v,w unit basis vectors from the camera coordinate frame.
+	kodak->w = unit_vector_vec3(sub_vec3(lookfrom, lookat));
+	kodak->u = unit_vector_vec3(cross_vec3(vup,kodak->w));
+	kodak->v = cross_vec3(kodak->w,kodak->u);
+
 	// Calculate the vectors across the horizontal and down the vertical viewport edges.
-	vec3 viewport_u = (vec3) {viewport_width,0,0};
-	vec3 viewport_v = (vec3) {0,-viewport_height,0};
+	vec3 viewport_u = scale_vec3(kodak->u,viewport_width); // vector across viewport horizontal edge
+	vec3 viewport_v = scale_vec3(scale_vec3(kodak->v,-1), viewport_height); // vector down viewport vertical edge
 
 	// Calculate the horizonatl and vertical delta vectors from pixel to pixel
 	kodak->pixel_delta_u = scale_vec3(viewport_u,1.0/image_width);
 	kodak->pixel_delta_v = scale_vec3(viewport_v,1.0/kodak->image_height);
 
-	point3 viewport_upper_left = 
-		sub_vec3(sub_vec3(
-					sub_vec3(kodak->center,(vec3){0,0,focal_length})
-					,scale_vec3(viewport_u,0.5))
-				,scale_vec3(viewport_v,0.5));
+	point3 viewport_upper_left = sub_vec3(
+									sub_vec3(
+										sub_vec3(kodak->center
+												,scale_vec3(kodak->w,focal_length))
+										,scale_vec3(viewport_u,0.5))
+									,scale_vec3(viewport_v,0.5));
+		
 	kodak->pixel00_loc = add_vec3(viewport_upper_left,
 			scale_vec3(add_vec3(kodak->pixel_delta_u,
 								kodak->pixel_delta_v),
@@ -69,7 +85,8 @@ create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel,
 
 }
 
-#define quick_camera(cam) create_camera(1.0,100,10,10,90,cam)
+#define quick_camera(cam) create_camera(1.0,100,10,10,90\
+		(point3){0,0,0},(point3){0,0,-1},(vec3){0,1,0},cam)
 
 inline vec3
 sample_square(void){

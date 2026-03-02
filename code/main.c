@@ -8,7 +8,7 @@
 
 int main(void){
 	sphere_list world;
-	/*
+	  
 	color ground_color= (color){0.8,0.8,0.0};
 	color center_color = (color){0.1,0.2,0.5};
 	color right_color = (color){0.8,0.6,0.2};
@@ -25,7 +25,7 @@ int main(void){
 	add_sphere(&world,(point3){-1.0, 0.0  ,-1.0},0.4,&material_bubble);
 	add_sphere(&world,(point3){ 1.0, 0.0  ,-1.0},0.5,&material_right);
 
-	*/
+	/*
 	f64 r = cos(pi/4.0);
 
 	color color_left = (color){0,0,1.0};
@@ -35,6 +35,7 @@ int main(void){
 
 	add_sphere(&world,(point3){-r,0,-1},r,&material_left);
 	add_sphere(&world,(point3){r,0,-1},r,&material_right);
+	*/
 
 
 	camera cam;
@@ -43,10 +44,13 @@ int main(void){
 	i32 samples_per_pixel = 100;
 	i32 max_depth = 50;
 
-	f64 vfov = 90;
+	f64 vfov = 20;
+	point3 lookfrom = {-2,2,1};
+	point3 lookat   = {0,0,-1};
+	vec3 vup        = {0,1,0};
 
-	create_camera(aspect_ratio,image_width
-				  ,samples_per_pixel,max_depth,vfov,&cam);
+	create_camera(aspect_ratio,image_width,samples_per_pixel,max_depth,
+				  vfov,lookfrom,lookat,vup,&cam);
 
 	render(&world,&cam);
 
