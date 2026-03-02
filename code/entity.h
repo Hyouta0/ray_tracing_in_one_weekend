@@ -126,6 +126,19 @@ scatter_metal(ray r_in, hit_record rec,
 	return TRUE;
 }
 
+internal b32
+scatter_dielectric(ray r_in, hit_record rec, 
+				   color* attenuation, ray* scattered){
+	*attenuation = (color){1.0,1.0,1.0};
+	f64 ri = rec.front_face? (1.0/rec.mat->refraction_index): rec.mat->refraction_index;
+
+	vec3 unit_direction = unit_vector_vec3(r_in.dir);
+	vec3 refracted = refract(unit_direction,rec.normal,ri);
+
+	*scattered = (ray){rec.p,refracted};
+	return TRUE;
+}
+
 inline b32
 scatter(ray r_in, hit_record rec, color* attenuation, ray* scattered){
 	switch(rec.mat->material_type){
@@ -134,6 +147,9 @@ scatter(ray r_in, hit_record rec, color* attenuation, ray* scattered){
 		}break;
 		case MATERIAL_TYPE_METAL:{
 			return scatter_metal(r_in,rec,attenuation,scattered);
+		}break;
+		case MATERIAL_TYPE_DIELECTRIC:{
+			return scatter_dielectric(r_in,rec,attenuation,scattered);
 		}break;
 		default:{
 			return FALSE;

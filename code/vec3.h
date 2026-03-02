@@ -152,4 +152,15 @@ reflect_vec3(vec3 v, vec3 n){
 			scale_vec3(n,2.0*dot_vec3(v,n)));
 }
 
+inline vec3 
+refract(vec3 uv, vec3 n,f64 etai_over_etat){
+	f64 cos_theta = min_num(dot_vec3(scale_vec3(uv,-1),n),1.0);
+	vec3 r_out_perp = scale_vec3(
+							add_vec3(uv,scale_vec3(n,cos_theta))
+							,etai_over_etat);
+	vec3 r_out_parallel = scale_vec3(n
+			,-sqrt(fabs(1.0 - length_squared_vec3(r_out_perp))));
+	return add_vec3(r_out_perp,r_out_parallel);
+}
+
 #endif
