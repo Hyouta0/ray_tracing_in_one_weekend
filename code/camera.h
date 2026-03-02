@@ -12,6 +12,9 @@ typedef struct{
 	point3 lookfrom; // Point camera is looking from
 	point3 lookat; // Point camera is looking at
 	vec3   vup;   // Camera- relative "up" direction
+	
+	f64 defocus_angle; // Variation angle of rays through each pixel
+	f64 focus_dist;// Distance from camera lookfrom point to plane of prefect focus
 
 	i32 image_height;        // Rendered image height
 	f64 pixel_samples_scale; // Color scale factor for a sum of pixel samples
@@ -20,6 +23,8 @@ typedef struct{
 	vec3   pixel_delta_u;    // Offset to pixel to the right
 	vec3   pixel_delta_v;    // offset to pixel below
 	vec3   u,v,w; // camera frame basis vectors
+	vec3 defocus_disk_u; // Defocus disk horizontal radius
+	vec3 defocus_disk_v; // Defocus disk vertical radius
 }camera;
 
 /*
@@ -32,7 +37,7 @@ typedef struct{
 internal void 
 create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel, 
 			  i32 max_depth,f64 vfov, point3 lookfrom, point3 lookat, 
-			  vec3 vup, camera* kodak){
+			  vec3 vup, f64 defocus_angle, f64 focus_dist, camera* kodak){
 	kodak->aspect_ratio = aspect_ratio;
 	kodak->image_width = image_width;
 	kodak->samples_per_pixel = samples_per_pixel;
@@ -43,6 +48,9 @@ create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel,
 	kodak->lookat = lookat;
 	kodak->vup = vup;
 
+	kodak->defocus_angle = defocus_angle;
+	kodak->focus_dist = focus_dist;
+
 	kodak->image_height = (i32) (image_width/aspect_ratio);
 	kodak->image_height = (kodak->image_height < 1)? 1: kodak->image_height;
 
@@ -51,10 +59,9 @@ create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel,
 	kodak->center = lookfrom; 
 
 	//Determine viewport dimensions.
-	f64 focal_length = length_vec3(sub_vec3(lookfrom,lookat));
 	f64 theta = degrees_to_radians(vfov);
 	f64 h = tan(theta/2);
-	f64 viewport_height = 2.0*h*focal_length;
+	f64 viewport_height = 2.0*h*kodak->focus_dist;
 	f64 viewport_width = viewport_height * ((f64)image_width/kodak->image_height);
 
 	// Calculate the u,v,w unit basis vectors from the camera coordinate frame.
@@ -70,10 +77,11 @@ create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel,
 	kodak->pixel_delta_u = scale_vec3(viewport_u,1.0/image_width);
 	kodak->pixel_delta_v = scale_vec3(viewport_v,1.0/kodak->image_height);
 
+	// Calculate the location of the upper left pixel
 	point3 viewport_upper_left = sub_vec3(
 									sub_vec3(
 										sub_vec3(kodak->center
-												,scale_vec3(kodak->w,focal_length))
+												,scale_vec3(kodak->w,kodak->focus_dist))
 										,scale_vec3(viewport_u,0.5))
 									,scale_vec3(viewport_v,0.5));
 		
@@ -81,12 +89,16 @@ create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel,
 			scale_vec3(add_vec3(kodak->pixel_delta_u,
 								kodak->pixel_delta_v),
 						0.5));
+	// Calculate the camera defocus disk basis vector
+	f64 defocus_radius = focus_dist * tan(degrees_to_radians(defocus_angle/2));
+	kodak->defocus_disk_u = scale_vec3(kodak->u, defocus_radius);
+	kodak->defocus_disk_v = scale_vec3(kodak->v, defocus_radius);
 
 
 }
 
 #define quick_camera(cam) create_camera(1.0,100,10,10,90\
-		(point3){0,0,0},(point3){0,0,-1},(vec3){0,1,0},cam)
+		(point3){0,0,0},(point3){0,0,-1},(vec3){0,1,0},0,10,cam)
 
 inline vec3
 sample_square(void){
@@ -97,6 +109,15 @@ sample_square(void){
 	return random_point_vec;
 }
 
+inline point3
+defocus_disk_sample(camera* cam){
+	// Returns a random point in the camera defocus disk.
+	point3 p = random_in_unit_disk();
+	return add_vec3(cam->center,
+			add_vec3(scale_vec3(cam->defocus_disk_u,p.e[0])
+					,scale_vec3(cam->defocus_disk_v,p.e[1])));
+}
+
 internal ray
 get_ray(i32 i, i32 j,camera* cam){
 	vec3 offset = sample_square();
@@ -105,7 +126,7 @@ get_ray(i32 i, i32 j,camera* cam){
 									   scale_vec3(cam->pixel_delta_u,(i + offset.x)),
 									   scale_vec3(cam->pixel_delta_v,(j + offset.y))
 									   ));
-	point3 ray_origin = cam->center;
+	point3 ray_origin = (cam->defocus_angle <= 0)? cam->center: defocus_disk_sample(cam);
 	vec3 ray_direction = sub_vec3(pixel_sample, ray_origin);
 	return (ray){ray_origin,ray_direction};
 

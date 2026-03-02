@@ -163,4 +163,15 @@ refract_vec3(vec3 uv, vec3 n,f64 etai_over_etat){
 	return add_vec3(r_out_perp,r_out_parallel);
 }
 
+// Defocuse
+inline vec3
+random_in_unit_disk(void){
+	while(TRUE){
+		vec3 p = (vec3){random_in_range_f64(-1,1)
+						,random_in_range_f64(-1,1)
+						,0};
+		if(length_squared_vec3(p) < 1) return p;
+	}
+}
+
 #endif

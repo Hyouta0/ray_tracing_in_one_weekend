@@ -49,8 +49,11 @@ int main(void){
 	point3 lookat   = {0,0,-1};
 	vec3 vup        = {0,1,0};
 
+	f64 defocus_angle = 10.0;
+	f64 focus_dist = 3.4;
+
 	create_camera(aspect_ratio,image_width,samples_per_pixel,max_depth,
-				  vfov,lookfrom,lookat,vup,&cam);
+				  vfov,lookfrom,lookat,vup,defocus_angle,focus_dist,&cam);
 
 	render(&world,&cam);
 
