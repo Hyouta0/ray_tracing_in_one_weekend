@@ -15,6 +15,7 @@ int main(void){
 	Material material_ground = create_material_lambertian(ground_color);
 	Material material_center = create_material_lambertian(center_color);
 	Material material_left = create_material_dielectric(1.50);
+	Material material_bubble = create_material_dielectric(1.00/1.50);
 	Material material_right = create_material_metal(right_color,1.0);
 
 
@@ -22,6 +23,7 @@ int main(void){
 	add_sphere(&world,(point3){ 0.0,-100.5,-1.0},100,&material_ground);
 	add_sphere(&world,(point3){ 0.0, 0.0  ,-1.2},0.5,&material_center);
 	add_sphere(&world,(point3){-1.0, 0.0  ,-1.0},0.5,&material_left);
+	add_sphere(&world,(point3){-1.0, 0.0  ,-1.0},0.4,&material_bubble);
 	add_sphere(&world,(point3){ 1.0, 0.0  ,-1.0},0.5,&material_right);
 
 	camera cam;

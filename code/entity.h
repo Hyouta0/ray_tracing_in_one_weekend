@@ -126,6 +126,14 @@ scatter_metal(ray r_in, hit_record rec,
 	return TRUE;
 }
 
+inline f64
+reflectance(f64 cosine, f64 refraction_index){
+	// Use Schlick's approximation for reflectance.
+	f64 r0 = (1.0 - refraction_index) / (1 + refraction_index);
+	r0 = r0*r0;
+	return r0+(1-r0)* pow((1.0 - cosine),5);
+}
+
 internal b32
 scatter_dielectric(ray r_in, hit_record rec, 
 				   color* attenuation, ray* scattered){
@@ -133,9 +141,17 @@ scatter_dielectric(ray r_in, hit_record rec,
 	f64 ri = rec.front_face? (1.0/rec.mat->refraction_index): rec.mat->refraction_index;
 
 	vec3 unit_direction = unit_vector_vec3(r_in.dir);
-	vec3 refracted = refract(unit_direction,rec.normal,ri);
+	f64 cos_theta = min_num(dot_vec3(scale_vec3(unit_direction,-1)
+									 ,rec.normal)
+							,1.0);
+	f64 sin_theta = sqrt(1.0 - cos_theta*cos_theta);
 
-	*scattered = (ray){rec.p,refracted};
+	b32 cannot_refract = ri*sin_theta > 1.0;
+	vec3 direction;
+	if(cannot_refract || reflectance(cos_theta,ri) > random_f64()) direction = reflect_vec3(unit_direction,rec.normal);
+	else direction = refract_vec3(unit_direction,rec.normal,ri);
+
+	*scattered = (ray){rec.p,direction};
 	return TRUE;
 }
 
