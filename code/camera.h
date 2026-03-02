@@ -6,7 +6,9 @@ typedef struct{
 	f64 aspect_ratio;// ratio of image width over height
 	i32 image_width;// Rendered image width in pixel count 
 	i32 samples_per_pixel;// Count of random samples for each pixel;
-	i32 max_depth;
+	i32 max_depth; // Maximum number of ray bounces into scene
+	
+	f64 vfov; // vertical view angle (field of view)
 
 	i32 image_height;        // Rendered image height
 	f64 pixel_samples_scale; // Color scale factor for a sum of pixel samples
@@ -24,12 +26,13 @@ typedef struct{
  * !! Was err that was hard to find.
  */
 internal void 
-create_camera(f64 aspect_ratio, i32 image_width,
-			  i32 samples_per_pixel, i32 max_depth, camera* kodak){
+create_camera(f64 aspect_ratio, i32 image_width, i32 samples_per_pixel, 
+			  i32 max_depth,f64 vfov, camera* kodak){
 	kodak->aspect_ratio = aspect_ratio;
 	kodak->image_width = image_width;
 	kodak->samples_per_pixel = samples_per_pixel;
 	kodak->max_depth = max_depth;
+	kodak->vfov = vfov;
 
 	kodak->image_height = (i32) (image_width/aspect_ratio);
 	kodak->image_height = (kodak->image_height < 1)? 1: kodak->image_height;
@@ -40,7 +43,9 @@ create_camera(f64 aspect_ratio, i32 image_width,
 
 	//Determine viewport dimensions.
 	f64 focal_length = 1.0;
-	f64 viewport_height = 2.0;
+	f64 theta = degrees_to_radians(vfov);
+	f64 h = tan(theta/2);
+	f64 viewport_height = 2.0*h*focal_length;
 	f64 viewport_width = viewport_height * ((f64)image_width/kodak->image_height);
 
 	// Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -64,7 +69,7 @@ create_camera(f64 aspect_ratio, i32 image_width,
 
 }
 
-#define quick_camera(cam) create_camera(1.0,100,10,10,#cam)
+#define quick_camera(cam) create_camera(1.0,100,10,10,90,cam)
 
 inline vec3
 sample_square(void){
