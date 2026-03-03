@@ -56,7 +56,7 @@ int main(void){
 	camera cam;
 	f64 aspect_ratio = 16.0 / 9.0;
 	i32 image_width = 1200;
-	i32 samples_per_pixel = 500;
+	i32 samples_per_pixel = 100;
 	i32 max_depth = 50;
 
 	f64 vfov = 20;
