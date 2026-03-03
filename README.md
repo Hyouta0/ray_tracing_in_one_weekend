@@ -1,4 +1,4 @@
 # Software Raytracer in C
 
 ## Final Rendered Image
-![Raytracer Output](msic/image.png)
+![Raytracer Output](misc/image.png)
